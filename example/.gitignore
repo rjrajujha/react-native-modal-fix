@@ -21,12 +21,10 @@ DerivedData
 *.ipa
 *.xcuserstate
 xcshareddata
-contents.xcworkspacedata
 
 # Android/IntelliJ
 #
 build/
-dist/
 .idea
 .gradle
 local.properties
@@ -37,7 +35,6 @@ local.properties
 node_modules/
 npm-debug.log
 yarn-error.log
-package-lock.json
 
 # BUCK
 buck-out/
@@ -45,10 +42,19 @@ buck-out/
 *.keystore
 !debug.keystore
 
-# VS Code
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+# fastlane
+#
+# It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the
+# screenshots whenever they are needed.
+# For more information about the recommended setup visit:
+# https://docs.fastlane.tools/best-practices/source-control/
 
+*/fastlane/report.xml
+*/fastlane/Preview.html
+*/fastlane/screenshots
+
+# Bundle artifact
+*.jsbundle
+
+# CocoaPods
+/ios/Pods/
