@@ -255,14 +255,16 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
     if (this.state.isVisible) {
       this.open();
     }
-    BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPress);
+    // BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPress);
+    // this.backHandler = BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPress);
   }
 
   componentWillUnmount() {
-    BackHandler.removeEventListener(
-      'hardwareBackPress',
-      this.onBackButtonPress,
-    );
+    // BackHandler.removeEventListener(
+    //   'hardwareBackPress',
+    //   this.onBackButtonPress,
+    // );
+    // this.backHandler && this.backHandler.remove();
     if (this.didUpdateDimensionsEmitter) {
       this.didUpdateDimensionsEmitter.remove();
     }
@@ -723,6 +725,7 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
           this.state.showContent && !hasCustomBackdrop
             ? backdropColor
             : 'transparent',
+        opacity: this.props.backdropOpacity,
       },
     ];
 
