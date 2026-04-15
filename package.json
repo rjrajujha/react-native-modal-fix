@@ -1,6 +1,6 @@
 {
   "name": "react-native-modal-fix",
-  "version": "13.0.4",
+  "version": "13.0.5",
   "description": "Maintained fork of react-native-modal with compatibility and packaging fixes",
   "packageManager": "npm@10",
   "main": "dist/index.js",
