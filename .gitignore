@@ -38,6 +38,8 @@ node_modules/
 npm-debug.log
 yarn-error.log
 package-lock.json
+.npm-cache/
+*.tgz
 
 # BUCK
 buck-out/
@@ -51,4 +53,4 @@ buck-out/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-
+.codex

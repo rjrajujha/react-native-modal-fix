@@ -1,8 +1,14 @@
-# Overview
+## Summary
 
-<!-- Thank you for sending the PR! We appreciate you spending the time to work on these changes. -->
-<!-- Help us understand your motivation by explaining why you decided to make this change -->
+<!-- What changed and why? -->
 
-# Test Plan
+## Checklist
 
-<!-- Write your test plan here. If you changed any code, please provide us with clear instructions on how you verified your changes work. Bonus points for screenshots and videos! -->
+- [ ] I ran `npm run test`.
+- [ ] I ran `npm run build`.
+- [ ] I updated docs/README (if needed).
+- [ ] I considered backward compatibility and migration impact.
+
+## Test plan
+
+<!-- How did you verify this change? Include screenshots/video when useful. -->

@@ -1,65 +1,71 @@
-# Contributing to React Native Modal
+# Contributing to react-native-modal-fix
 
-## Development Process
+Thanks for contributing.
 
-All work on React Native Modal happens directly on GitHub. Contributors send pull requests which go through a review process.
+`react-native-modal-fix` is a maintained fork of [`react-native-modal`](https://github.com/react-native-modal/react-native-modal). This repo focuses on safe bug fixes, compatibility updates, and release hygiene while keeping the API stable.
 
-> **Working on your first pull request?** You can learn how from this _free_ series: [How to Contribute to an Open Source Project on GitHub](https://egghead.io/series/how-to-contribute-to-an-open-source-project-on-github).
+## Before you start
 
-1. Fork the repo and create your branch from `master` (a guide on [how to fork a repository](https://help.github.com/articles/fork-a-repo/)).
-2. Run `yarn` or `npm install` to install all required dependencies.
-3. Now you are ready to make your changes!
+1. Search existing [issues](https://github.com/rjrajujha/react-native-modal-fix/issues) and [pull requests](https://github.com/rjrajujha/react-native-modal-fix/pulls).
+2. For behavior that appears to come from React Native core `<Modal />`, include that detail in your report.
+3. Prefer focused PRs with one logical change.
 
-### Development flow
+## Local development
 
-- Head into the `example` folder and do the same.
-- Head into `ios` and run `pod install` if you wish to compile under iOS
-- Get back into the root folder and launch `yarn run dev`. This will launch `ts` in watch mode.
-- Get into the `example` folder again and type `yarn run start`.
-- You can now open Android Studio or XCode directly from `example/android` or `example/ios` respectively, build
-  and run the app.
+1. Install dependencies in the root project:
 
-## Tests & Verifications
+```bash
+npm install
+```
 
-Currently we use `eslint` with `prettier` for linting and formatting the code.  
-We still don't have a test suite (it's a WIP).
-All of these are run on CircleCI for all opened pull requests, but you should use them locally when making changes.
+2. Start TypeScript watch mode (optional while editing):
 
-- `yarn test`: Run all tests and validations.
-- `yarn lint`: Run `eslint`.
-- `yarn test:ts`: Checks TypeScript
-- `yarn lint --fix`: Run `eslint` and automatically fix issues. This is useful for correcting code formatting.
+```bash
+npm run dev
+```
 
-## Sending a pull request
+3. Validate changes before opening a PR:
 
-When you're sending a pull request:
+```bash
+npm run test
+npm run build
+```
 
-- Prefer small pull requests focused on one change.
-- Verify that all tests and validations are passing.
-- Follow the pull request template when opening a pull request.
+## Working with the example app
 
-## Commit message convention
+```bash
+cd example
+npm install
+npm run start
+```
 
-We prefix our commit messages with one of the following to signify the kind of change:
+Then open `example/android` in Android Studio or `example/ios` in Xcode.
 
-- **build**: Changes that affect the build system or external dependencies.
-- **ci**, **chore**: Changes to our CI configuration files and scripts.
-- **docs**: Documentation only changes.
-- **feat**: A new feature.
-- **fix**: A bug fix.
-- **perf**: A code change that improves performance.
-- **refactor**: A code change that neither fixes a bug nor adds a feature.
-- **style**: Changes that do not affect the meaning of the code.
-- **test**: Adding missing tests or correcting existing tests.
+## Commit style
+
+Conventional commit prefixes are used for release automation:
+
+- `fix`: bug fix
+- `feat`: feature
+- `docs`: documentation only
+- `refactor`: internal change without behavior change
+- `perf`: performance improvement
+- `test`: tests only
+- `ci`: CI/CD changes
+- `chore`: maintenance changes
+
+## Pull request checklist
+
+- [ ] Change is backward compatible, or migration notes are included.
+- [ ] `npm run test` passes locally.
+- [ ] `npm run build` passes locally.
+- [ ] README/docs are updated when behavior or API changed.
+- [ ] Any edge cases and tradeoffs are documented in the PR description.
 
 ## Release process
 
-We use [Semantic Release](http://semantic-release.org) to automatically release new versions of the library when changes are merged into master. Using the commit message convention described above, it will detect if we need to release a patch, minor, or major version of the library.
-
-## Reporting issues
-
-You can report issues on our [bug tracker](https://github.com/react-native-community/react-native-modal/issues). Please search for existing issues and follow the issue template when opening an issue.
+Releases are automated with Semantic Release from `main`.
 
 ## License
 
-By contributing to React Native Modal, you agree that your contributions will be licensed under the **MIT** license.
+By contributing, you agree that your contributions will be licensed under the MIT license.

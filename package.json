@@ -1,19 +1,21 @@
 {
   "name": "react-native-modal-fix",
   "version": "13.0.3",
-  "description": "An enhanced React Native modal",
+  "description": "Maintained fork of react-native-modal with compatibility and packaging fixes",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist/"
   ],
   "scripts": {
-    "lint": "eslint \"src/**/*.{ts, tsx}\"",
-    "test": "yarn run test:ts && yarn run lint",
-    "release": "yarn semantic-release",
+    "lint": "eslint --resolve-plugins-relative-to ./node_modules/@react-native-community/eslint-config \"src/**/*.{ts, tsx}\"",
+    "test": "npm run test:ts && npm run lint",
+    "release": "semantic-release",
     "build": "tsc",
     "dev": "tsc --watch",
     "test:ts": "tsc --noEmit",
+    "prepack": "npm run build",
+    "pack:dry": "npm_config_cache=./.npm-cache npm pack --dry-run --json",
     "build:e2e:android:debug": "detox build -c android.emu.debug",
     "build:e2e:android:release": "detox build -c android.emu.release",
     "test:e2e:android:debug": "detox test -c android.emu.debug",
@@ -30,6 +32,8 @@
   },
   "keywords": [
     "react-native",
+    "react-native-modal",
+    "react-native-modal-fix",
     "react",
     "native",
     "modal",
@@ -41,10 +45,19 @@
   ],
   "author": "Raju Jha",
   "license": "MIT",
-  "homepage": "https://github.com/rjrajujha/react-native-modal-fix",
+  "homepage": "https://github.com/rjrajujha/react-native-modal-fix#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/rjrajujha/react-native-modal-fix"
+    "url": "git+https://github.com/rjrajujha/react-native-modal-fix.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rjrajujha/react-native-modal-fix/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=16"
   },
   "dependencies": {
     "prop-types": "^15.6.2",
@@ -68,7 +81,6 @@
     "husky": "^3.0.9",
     "jest": "^24.9.0",
     "metro-react-native-babel-preset": "0.56.0",
-    "postinstall": "^0.5.1",
     "prettier": "^1.18.2",
     "pretty-quick": "^2.0.0",
     "react": "16.9.0",
@@ -78,7 +90,7 @@
     "typescript": "3.7.2"
   },
   "peerDependencies": {
-    "react": "*",
+    "react": ">=16.8.0",
     "react-native": ">=0.65.0"
   },
   "jest": {

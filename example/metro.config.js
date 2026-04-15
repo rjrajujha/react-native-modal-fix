@@ -21,6 +21,7 @@ module.exports = {
   watchFolders: [reactNativeModalRoot],
   resolver: {
     extraNodeModules: {
+      'react-native-modal-fix': reactNativeModalRoot,
       'react-native': path.resolve(__dirname, 'node_modules/react-native'),
     },
     blacklistRE: blacklist([

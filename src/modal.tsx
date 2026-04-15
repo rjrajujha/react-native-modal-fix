@@ -1,14 +1,11 @@
 import * as React from 'react';
 import {
   Animated,
-  DeviceEventEmitter,
   Dimensions,
-  EmitterSubscription,
   InteractionManager,
   KeyboardAvoidingView,
   Modal,
   PanResponder,
-  BackHandler,
   PanResponderGestureState,
   PanResponderInstance,
   Platform,
@@ -44,6 +41,14 @@ initializeAnimations();
 export type OnSwipeCompleteParams = {
   swipingDirection: Direction;
 };
+
+type ScrollToOffset = {
+  x?: number;
+  y?: number;
+  animated?: boolean;
+};
+
+type ScrollTo = (offset: ScrollToOffset) => void;
 
 type State = {
   showContent: boolean;
@@ -87,7 +92,7 @@ const defaultProps = {
   onModalWillHide: (() => null) as () => void,
   onBackdropPress: (() => null) as () => void,
   onBackButtonPress: (() => null) as () => void,
-  scrollTo: null as OrNull<(e: any) => void>,
+  scrollTo: null as OrNull<ScrollTo>,
   scrollOffset: 0,
   scrollOffsetMax: 0,
   scrollHorizontal: false,
@@ -107,6 +112,9 @@ export type ModalProps = ViewProps & {
     gestureState: PanResponderGestureState,
   ) => void;
   onSwipeCancel?: (gestureState: PanResponderGestureState) => void;
+  /** @deprecated Use onSwipeComplete instead. */
+  onSwipe?: () => void;
+  scrollTo?: OrNull<ScrollTo>;
   style?: StyleProp<ViewStyle>;
   swipeDirection?: Direction | Array<Direction>;
   onDismiss?: () => void;
@@ -155,6 +163,7 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
     onSwipeMove: PropTypes.func,
     onSwipeComplete: PropTypes.func,
     onSwipeCancel: PropTypes.func,
+    onSwipe: PropTypes.func,
     swipeThreshold: PropTypes.number,
     swipeDirection: PropTypes.oneOfType([
       PropTypes.arrayOf(PropTypes.oneOf(['up', 'down', 'left', 'right'])),
@@ -203,7 +212,7 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
   backdropRef: any;
   contentRef: any;
   panResponder: OrNull<PanResponderInstance> = null;
-  didUpdateDimensionsEmitter: OrNull<EmitterSubscription> = null;
+  didUpdateDimensionsEmitter: OrNull<{remove: () => void}> = null;
 
   interactionHandle: OrNull<number> = null;
 
@@ -243,32 +252,37 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
   }
   componentDidMount() {
     // Show deprecation message
-    if ((this.props as any).onSwipe) {
+    if (this.props.onSwipe) {
       console.warn(
-        '`<Modal onSwipe="..." />` is deprecated and will be removed starting from 13.0.0. Use `<Modal onSwipeComplete="..." />` instead.',
+        '`<Modal onSwipe="..." />` is deprecated and will be removed in a future major release. Use `<Modal onSwipeComplete="..." />` instead.',
       );
     }
-    this.didUpdateDimensionsEmitter = DeviceEventEmitter.addListener(
-      'didUpdateDimensions',
+    const dimensionsEventSubscription = (Dimensions as any).addEventListener(
+      'change',
       this.handleDimensionsUpdate,
     );
+    if (
+      dimensionsEventSubscription &&
+      typeof dimensionsEventSubscription.remove === 'function'
+    ) {
+      this.didUpdateDimensionsEmitter = dimensionsEventSubscription;
+    }
     if (this.state.isVisible) {
       this.open();
     }
-    // BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPress);
-    // this.backHandler = BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPress);
   }
 
   componentWillUnmount() {
-    // BackHandler.removeEventListener(
-    //   'hardwareBackPress',
-    //   this.onBackButtonPress,
-    // );
-    // this.backHandler && this.backHandler.remove();
     if (this.didUpdateDimensionsEmitter) {
       this.didUpdateDimensionsEmitter.remove();
+      this.didUpdateDimensionsEmitter = null;
+    } else if (typeof (Dimensions as any).removeEventListener === 'function') {
+      (Dimensions as any).removeEventListener(
+        'change',
+        this.handleDimensionsUpdate,
+      );
     }
-    if (this.interactionHandle) {
+    if (this.interactionHandle != null) {
       InteractionManager.clearInteractionHandle(this.interactionHandle);
       this.interactionHandle = null;
     }
@@ -297,6 +311,7 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
         this.props.backdropTransitionInTiming,
       );
     }
+    this.updatePanResponderForSwipeDirection(prevProps.swipeDirection);
     // On modal open request, we slide the view up and fade in the backdrop
     if (this.props.isVisible && !prevProps.isVisible) {
       this.open();
@@ -307,13 +322,6 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
   }
   getDeviceHeight = () => this.props.deviceHeight || this.state.deviceHeight;
   getDeviceWidth = () => this.props.deviceWidth || this.state.deviceWidth;
-  onBackButtonPress = () => {
-    if (this.props.onBackButtonPress && this.props.isVisible) {
-      this.props.onBackButtonPress();
-      return true;
-    }
-    return false;
-  };
 
   shouldPropagateSwipe = (
     evt: GestureResponderEvent,
@@ -322,6 +330,48 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
     return typeof this.props.propagateSwipe === 'function'
       ? this.props.propagateSwipe(evt, gestureState)
       : this.props.propagateSwipe;
+  };
+
+  updatePanResponderForSwipeDirection = (
+    previousSwipeDirection: ModalProps['swipeDirection'],
+  ) => {
+    if (this.props.swipeDirection === previousSwipeDirection) {
+      return;
+    }
+
+    const isSwipeable = !!this.props.swipeDirection;
+    if (isSwipeable === this.state.isSwipeable) {
+      return;
+    }
+
+    if (isSwipeable) {
+      this.buildPanResponder();
+      this.setState({
+        isSwipeable: true,
+        pan: new Animated.ValueXY(),
+      });
+      return;
+    }
+
+    this.panResponder = null;
+    this.currentSwipingDirection = null;
+    this.setState({
+      isSwipeable: false,
+      pan: null,
+    });
+  };
+
+  getGestureDispatchInstances = (
+    event: GestureResponderEvent,
+  ): Array<{type?: unknown}> => {
+    const dispatchInstances = (event as any)._dispatchInstances;
+    if (Array.isArray(dispatchInstances)) {
+      return dispatchInstances;
+    }
+    if (dispatchInstances) {
+      return [dispatchInstances];
+    }
+    return [];
   };
 
   buildPanResponder = () => {
@@ -352,12 +402,15 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
 
         return false;
       },
-      onStartShouldSetPanResponder: (e: any, gestureState) => {
-        const hasScrollableView =
-          e._dispatchInstances &&
-          e._dispatchInstances.some((instance: any) =>
+      onStartShouldSetPanResponder: (
+        e: GestureResponderEvent,
+        gestureState,
+      ) => {
+        const hasScrollableView = this.getGestureDispatchInstances(e).some(
+          instance =>
+            typeof instance.type === 'string' &&
             /scrollview|flatlist/i.test(instance.type),
-          );
+        );
 
         if (
           hasScrollableView &&
@@ -441,9 +494,9 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
             return;
           }
           // Deprecated. Remove later.
-          if ((this.props as any).onSwipe) {
+          if (this.props.onSwipe) {
             this.inSwipeClosingState = true;
-            (this.props as any).onSwipe();
+            this.props.onSwipe();
             return;
           }
         }
@@ -467,10 +520,17 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
 
         if (this.props.scrollTo) {
           if (this.props.scrollOffset > this.props.scrollOffsetMax) {
-            this.props.scrollTo({
-              y: this.props.scrollOffsetMax,
-              animated: true,
-            });
+            if (this.props.scrollHorizontal) {
+              this.props.scrollTo({
+                x: this.props.scrollOffsetMax,
+                animated: true,
+              });
+            } else {
+              this.props.scrollTo({
+                y: this.props.scrollOffsetMax,
+                animated: true,
+              });
+            }
           }
         }
       },
@@ -605,9 +665,7 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
       );
     }
 
-    // This is for resetting the pan position,otherwise the modal gets stuck
-    // at the last released position when you try to open it.
-    // TODO: Could certainly be improved - no idea for the moment.
+    // Reset pan position so the modal does not reopen at the previous drag offset.
     if (this.state.isSwipeable) {
       this.state.pan!.setValue({x: 0, y: 0});
     }
@@ -621,7 +679,7 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
         .animate(this.animationIn, this.props.animationInTiming)
         .then(() => {
           this.isTransitioning = false;
-          if (this.interactionHandle) {
+          if (this.interactionHandle != null) {
             InteractionManager.clearInteractionHandle(this.interactionHandle);
             this.interactionHandle = null;
           }
@@ -670,7 +728,7 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
         .animate(animationOut, this.props.animationOutTiming)
         .then(() => {
           this.isTransitioning = false;
-          if (this.interactionHandle) {
+          if (this.interactionHandle != null) {
             InteractionManager.clearInteractionHandle(this.interactionHandle);
             this.interactionHandle = null;
           }
@@ -788,7 +846,7 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
 
     let panHandlers = {};
     let panPosition = {};
-    if (this.state.isSwipeable) {
+    if (this.state.isSwipeable && this.panResponder && this.state.pan) {
       panHandlers = {...this.panResponder!.panHandlers};
 
       if (useNativeDriver) {

@@ -8,6 +8,10 @@
     "lib": ["es6"],
     "moduleResolution": "node",
     "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "react-native-modal-fix": ["../src/index"]
+    },
     "strict": false,
     "target": "esnext",
     "resolveJsonModule": true
