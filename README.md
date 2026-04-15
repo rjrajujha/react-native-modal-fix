@@ -149,6 +149,8 @@ No API redesign is required for typical usage.
 
 ## Local development
 
+Repository package management is standardized on npm (`package-lock.json` + `npm ci` in CI).
+
 ```bash
 npm install
 npm run test
